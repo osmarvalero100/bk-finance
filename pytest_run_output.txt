@@ -1,0 +1,15 @@
+/home/itfarmalisto/projects/bk-finance/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:331: PluggyTeardownRaisedWarning: A plugin raised an exception during an old-style hookwrapper teardown.
+Plugin: helpconfig, Hook: pytest_cmdline_parse
+ConftestImportFailure: AttributeError: partially initialized module 'httpx' has no attribute 'BaseTransport' (most likely due to a circular import) (from /home/itfarmalisto/projects/bk-finance/tests/conftest.py)
+For more information see https://pluggy.readthedocs.io/en/stable/api_reference.html#pluggy.PluggyTeardownRaisedWarning
+  config = pluginmanager.hook.pytest_cmdline_parse(
+ImportError while loading conftest '/home/itfarmalisto/projects/bk-finance/tests/conftest.py'.
+tests/conftest.py:3: in <module>
+    from httpx import AsyncClient
+httpx.py:12: in <module>
+    from fastapi.testclient import TestClient
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: in <module>
+    from starlette.testclient import TestClient as TestClient  # noqa
+.venv/lib/python3.12/site-packages/starlette/testclient.py:184: in <module>
+    class _TestClientTransport(httpx.BaseTransport):
+E   AttributeError: partially initialized module 'httpx' has no attribute 'BaseTransport' (most likely due to a circular import)
