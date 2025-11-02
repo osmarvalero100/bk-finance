@@ -6,7 +6,7 @@ import logging
 
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.routers import auth, expenses, incomes, investments, financial_products, debts
+from app.routers import auth, expenses, incomes, investments, financial_products, debts, categories, payment_methods
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -35,6 +35,8 @@ app.add_middleware(
 
 # Incluir routers
 app.include_router(auth.router, prefix="/auth", tags=["Autenticación"])
+app.include_router(categories.router, prefix="/categories", tags=["Categorías"])
+app.include_router(payment_methods.router, prefix="/payment-methods", tags=["Métodos de Pago"])
 app.include_router(expenses.router, prefix="/expenses", tags=["Gastos"])
 app.include_router(incomes.router, prefix="/incomes", tags=["Ingresos"])
 app.include_router(investments.router, prefix="/investments", tags=["Inversiones"])

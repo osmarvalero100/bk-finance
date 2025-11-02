@@ -22,6 +22,7 @@ from app.models.income import Income
 from app.models.investment import Investment
 from app.models.financial_product import FinancialProduct
 from app.models.debt import Debt
+from app.models.category import Category
 from app.utils.auth import get_password_hash, create_access_token
 
 # Configurar base de datos de prueba
@@ -86,13 +87,27 @@ def auth_headers(test_user):
     return {"Authorization": f"Bearer {access_token}"}
 
 @pytest.fixture
-def test_expense(db_session, test_user):
+def test_category(db_session, test_user):
+    """Crear categoría de prueba"""
+    category = Category(
+        user_id=test_user.id,
+        name="Food",
+        category_type="expense",
+        description="Food and dining expenses"
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    return category
+
+@pytest.fixture
+def test_expense(db_session, test_user, test_category):
     """Crear gasto de prueba"""
     expense = Expense(
         user_id=test_user.id,
+        category_id=test_category.id,
         amount=100.50,
         description="Test expense",
-        category="Food",
         date=datetime.utcnow(),
         payment_method="Credit Card"
     )
@@ -102,15 +117,29 @@ def test_expense(db_session, test_user):
     return expense
 
 @pytest.fixture
-def test_income(db_session, test_user):
+def test_income_category(db_session, test_user):
+    """Crear categoría de ingreso de prueba"""
+    category = Category(
+        user_id=test_user.id,
+        name="Salary",
+        category_type="income",
+        description="Salary income"
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    return category
+
+@pytest.fixture
+def test_income(db_session, test_user, test_income_category):
     """Crear ingreso de prueba"""
     income = Income(
         user_id=test_user.id,
+        category_id=test_income_category.id,
         amount=1000.00,
         description="Test income",
         source="Salary",
-        date=datetime.utcnow(),
-        category="Primary"
+        date=datetime.utcnow()
     )
     db_session.add(income)
     db_session.commit()

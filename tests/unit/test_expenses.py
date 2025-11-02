@@ -7,12 +7,12 @@ class TestExpenseEndpoints:
     """Tests para endpoints de gastos"""
 
     @pytest.mark.asyncio
-    async def test_create_expense_success(self, async_client: AsyncClient, auth_headers, db_session: Session):
+    async def test_create_expense_success(self, async_client: AsyncClient, auth_headers, db_session: Session, test_category):
         """Test crear gasto exitoso"""
         expense_data = {
             "amount": 50.75,
             "description": "Test expense description",
-            "category": "Food",
+            "category_id": test_category.id,
             "date": datetime.utcnow().isoformat(),
             "payment_method": "Credit Card",
             "is_recurring": False,
@@ -29,21 +29,23 @@ class TestExpenseEndpoints:
         data = response.json()
         assert data["amount"] == 50.75
         assert data["description"] == "Test expense description"
-        assert data["category"] == "Food"
+        assert data["category_id"] == test_category.id
         assert data["payment_method"] == "Credit Card"
         assert data["is_recurring"] is False
         assert data["notes"] == "Test notes"
         assert "id" in data
         assert "user_id" in data
         assert "created_at" in data
+        # Category is not loaded by default in create response
+        # It would be loaded in get operations
 
     @pytest.mark.asyncio
-    async def test_create_expense_invalid_amount(self, async_client: AsyncClient, auth_headers):
+    async def test_create_expense_invalid_amount(self, async_client: AsyncClient, auth_headers, test_category):
         """Test crear gasto con monto inválido"""
         expense_data = {
             "amount": -10,  # Monto negativo
             "description": "Test expense",
-            "category": "Food",
+            "category_id": test_category.id,
             "date": datetime.utcnow().isoformat()
         }
 
@@ -56,11 +58,11 @@ class TestExpenseEndpoints:
         assert response.status_code == 422  # Validation error
 
     @pytest.mark.asyncio
-    async def test_create_expense_missing_required_fields(self, async_client: AsyncClient, auth_headers):
+    async def test_create_expense_missing_required_fields(self, async_client: AsyncClient, auth_headers, test_category):
         """Test crear gasto con campos requeridos faltantes"""
         expense_data = {
             "amount": 50.00,
-            # Faltan description y category
+            # Faltan description y category_id
         }
 
         response = await async_client.post(
@@ -88,7 +90,9 @@ class TestExpenseEndpoints:
                 expense_found = True
                 assert expense["amount"] == test_expense.amount
                 assert expense["description"] == test_expense.description
-                assert expense["category"] == test_expense.category
+                assert expense["category_id"] == test_expense.category_id
+                assert "category" in expense
+                assert expense["category"]["name"] == "Food"
                 break
 
         assert expense_found, "Test expense not found in response"
@@ -100,7 +104,7 @@ class TestExpenseEndpoints:
         # Este test verifica que la función existe y es accesible
 
         response = await async_client.get(
-            "/expenses/?category=Food",
+            f"/expenses/?category_id={test_expense.category_id}",
             headers=auth_headers
         )
 
@@ -108,9 +112,9 @@ class TestExpenseEndpoints:
         data = response.json()
         assert isinstance(data, list)
 
-        # Todos los gastos deberían ser de categoría Food
+        # Todos los gastos deberían ser de la categoría del test
         for expense in data:
-            assert expense["category"] == "Food"
+            assert expense["category_id"] == test_expense.category_id
 
     @pytest.mark.asyncio
     async def test_get_expense_by_id(self, async_client: AsyncClient, auth_headers, test_expense):
@@ -125,7 +129,9 @@ class TestExpenseEndpoints:
         assert data["id"] == test_expense.id
         assert data["amount"] == test_expense.amount
         assert data["description"] == test_expense.description
-        assert data["category"] == test_expense.category
+        assert data["category_id"] == test_expense.category_id
+        # Note: Category is not included in the response by default
+        # It would need to be loaded explicitly in the router
 
     @pytest.mark.asyncio
     async def test_get_expense_not_found(self, async_client: AsyncClient, auth_headers):
@@ -156,12 +162,23 @@ class TestExpenseEndpoints:
         db_session.add(other_user)
         db_session.commit()
 
+        # Crear categoría para el otro usuario
+        from app.models.category import Category
+        other_category = Category(
+            user_id=other_user.id,
+            name="Food",
+            category_type="expense",
+            description="Food expenses"
+        )
+        db_session.add(other_category)
+        db_session.commit()
+
         # Crear gasto para el otro usuario
         other_expense = Expense(
             user_id=other_user.id,
+            category_id=other_category.id,
             amount=100.00,
             description="Other user's expense",
-            category="Food",
             date=datetime.utcnow()
         )
         db_session.add(other_expense)
@@ -178,12 +195,23 @@ class TestExpenseEndpoints:
         assert "Gasto no encontrado" in data["detail"]
 
     @pytest.mark.asyncio
-    async def test_update_expense_success(self, async_client: AsyncClient, auth_headers, test_expense):
+    async def test_update_expense_success(self, async_client: AsyncClient, auth_headers, test_expense, db_session):
         """Test actualizar gasto exitoso"""
+        # Crear nueva categoría para la actualización
+        from app.models.category import Category
+        new_category = Category(
+            user_id=test_expense.user_id,
+            name="Entertainment",
+            category_type="expense",
+            description="Entertainment expenses"
+        )
+        db_session.add(new_category)
+        db_session.commit()
+
         update_data = {
             "amount": 75.50,
             "description": "Updated expense description",
-            "category": "Entertainment"
+            "category_id": new_category.id
         }
 
         response = await async_client.put(
@@ -197,7 +225,8 @@ class TestExpenseEndpoints:
         assert data["id"] == test_expense.id
         assert data["amount"] == 75.50
         assert data["description"] == "Updated expense description"
-        assert data["category"] == "Entertainment"
+        assert data["category_id"] == new_category.id
+        assert data["category"]["name"] == "Entertainment"
         # Campos no actualizados deberían mantenerse
         assert data["payment_method"] == test_expense.payment_method
 
@@ -257,15 +286,17 @@ class TestExpenseEndpoints:
         # Buscar el resumen de la categoría del gasto de prueba
         category_found = False
         for summary in data:
-            if summary["category"] == test_expense.category:
+            if summary["category_id"] == test_expense.category_id:
                 category_found = True
                 assert "total_amount" in summary
                 assert "count" in summary
+                assert "category_name" in summary
+                assert summary["category_name"] == "Food"
                 assert summary["total_amount"] > 0
                 assert summary["count"] >= 1
                 break
 
-        assert category_found, f"Category {test_expense.category} not found in summary"
+        assert category_found, f"Category {test_expense.category_id} not found in summary"
 
     @pytest.mark.asyncio
     async def test_expenses_pagination(self, async_client: AsyncClient, auth_headers, db_session):
@@ -273,12 +304,23 @@ class TestExpenseEndpoints:
         # Crear múltiples gastos
         from app.models.expense import Expense
 
+        # Crear categoría para los gastos de paginación
+        from app.models.category import Category
+        pagination_category = Category(
+            user_id=test_expense.user_id,
+            name="Test",
+            category_type="expense",
+            description="Test category for pagination"
+        )
+        db_session.add(pagination_category)
+        db_session.commit()
+
         for i in range(5):
             expense = Expense(
-                user_id=1,  # Asumiendo que test_user tiene id=1
+                user_id=test_expense.user_id,
+                category_id=pagination_category.id,
                 amount=10.00 + i,
                 description=f"Test expense {i}",
-                category="Test",
                 date=datetime.utcnow()
             )
             db_session.add(expense)
@@ -304,12 +346,23 @@ class TestExpenseEndpoints:
         assert response.status_code == 403  # Forbidden
 
     @pytest.mark.asyncio
-    async def test_create_expense_with_recurring_data(self, async_client: AsyncClient, auth_headers):
+    async def test_create_expense_with_recurring_data(self, async_client: AsyncClient, auth_headers, db_session, test_user):
         """Test crear gasto con datos de recurrencia"""
+        # Crear categoría para el test
+        from app.models.category import Category
+        services_category = Category(
+            user_id=test_user.id,
+            name="Services",
+            category_type="expense",
+            description="Service expenses"
+        )
+        db_session.add(services_category)
+        db_session.commit()
+
         expense_data = {
             "amount": 100.00,
             "description": "Monthly subscription",
-            "category": "Services",
+            "category_id": services_category.id,
             "date": datetime.utcnow().isoformat(),
             "is_recurring": True,
             "recurring_frequency": "monthly",

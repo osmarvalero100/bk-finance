@@ -9,11 +9,11 @@ class Expense(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    payment_method_id = Column(Integer, ForeignKey("payment_methods.id"))
     amount = Column(Float, nullable=False)
     description = Column(String(255), nullable=False)
-    category = Column(String(100), nullable=False)
     date = Column(DateTime(timezone=True), nullable=False)
-    payment_method = Column(String(50))
     is_recurring = Column(Boolean, default=False)
     recurring_frequency = Column(String(20))  # daily, weekly, monthly, yearly
     tags = Column(Text)  # JSON string para etiquetas
@@ -21,5 +21,7 @@ class Expense(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    # Relación con usuario
+    # Relaciones
     user = relationship("User", back_populates="expenses")
+    category = relationship("Category", back_populates="expenses")
+    payment_method = relationship("PaymentMethod", back_populates="expenses")

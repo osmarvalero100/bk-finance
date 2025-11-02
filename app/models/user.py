@@ -22,3 +22,5 @@ class User(Base):
     investments = relationship("Investment", back_populates="user", cascade="all, delete-orphan")
     financial_products = relationship("FinancialProduct", back_populates="user", cascade="all, delete-orphan")
     debts = relationship("Debt", back_populates="user", cascade="all, delete-orphan")
+    categories = relationship("Category", back_populates="user", cascade="all, delete-orphan")
+    payment_methods = relationship("PaymentMethod", back_populates="user", cascade="all, delete-orphan")

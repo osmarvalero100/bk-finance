@@ -1,11 +1,13 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, desc
 
 from app.core.database import get_db
 from app.models.user import User
 from app.models.expense import Expense
+from app.models.category import Category
+from app.models.payment_method import PaymentMethod
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from app.utils.auth import get_current_active_user
 
@@ -19,11 +21,42 @@ async def create_expense(
 ):
     """Crear nuevo gasto"""
     try:
+        # Verificar que la categoría existe y pertenece al usuario
+        category = db.query(Category).filter(
+            and_(Category.id == expense_data.category_id, Category.user_id == current_user.id)
+        ).first()
+
+        if not category:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Categoría no encontrada"
+            )
+
+        if category.category_type != "expense":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La categoría seleccionada no es válida para gastos"
+            )
+
+        # Verificar método de pago si se especifica
+        if expense_data.payment_method_id:
+            payment_method = db.query(PaymentMethod).filter(
+                and_(PaymentMethod.id == expense_data.payment_method_id, PaymentMethod.user_id == current_user.id)
+            ).first()
+
+            if not payment_method:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Método de pago no encontrado"
+                )
+
         db_expense = Expense(**expense_data.dict(), user_id=current_user.id)
         db.add(db_expense)
         db.commit()
         db.refresh(db_expense)
         return ExpenseResponse.from_orm(db_expense)
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -35,16 +68,16 @@ async def create_expense(
 async def get_expenses(
     skip: int = 0,
     limit: int = 100,
-    category: str = None,
+    category_id: int = None,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Obtener lista de gastos del usuario"""
     try:
-        query = db.query(Expense).filter(Expense.user_id == current_user.id)
+        query = db.query(Expense).options(joinedload(Expense.category), joinedload(Expense.payment_method)).filter(Expense.user_id == current_user.id)
 
-        if category:
-            query = query.filter(Expense.category == category)
+        if category_id:
+            query = query.filter(Expense.category_id == category_id)
 
         expenses = query.order_by(desc(Expense.date)).offset(skip).limit(limit).all()
         return [ExpenseResponse.from_orm(expense) for expense in expenses]
@@ -62,7 +95,7 @@ async def get_expense(
 ):
     """Obtener gasto por ID"""
     try:
-        expense = db.query(Expense).filter(
+        expense = db.query(Expense).options(joinedload(Expense.category), joinedload(Expense.payment_method)).filter(
             and_(Expense.id == expense_id, Expense.user_id == current_user.id)
         ).first()
 
@@ -99,6 +132,37 @@ async def update_expense(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Gasto no encontrado"
             )
+
+        # Verificar categoría si se está actualizando
+        if expense_data.category_id is not None:
+            category = db.query(Category).filter(
+                and_(Category.id == expense_data.category_id, Category.user_id == current_user.id)
+            ).first()
+
+            if not category:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Categoría no encontrada"
+                )
+
+            if category.category_type != "expense":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="La categoría seleccionada no es válida para gastos"
+                )
+
+        # Verificar método de pago si se está actualizando
+        if expense_data.payment_method_id is not None:
+            if expense_data.payment_method_id:
+                payment_method = db.query(PaymentMethod).filter(
+                    and_(PaymentMethod.id == expense_data.payment_method_id, PaymentMethod.user_id == current_user.id)
+                ).first()
+
+                if not payment_method:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Método de pago no encontrado"
+                    )
 
         # Actualizar campos
         for field, value in expense_data.dict(exclude_unset=True).items():
@@ -155,18 +219,26 @@ async def get_expenses_summary_by_category(
         from sqlalchemy import func
 
         summary = db.query(
-            Expense.category,
+            Category.name.label('category_name'),
+            Category.id.label('category_id'),
+            Category.color,
+            Category.icon,
             func.sum(Expense.amount).label('total_amount'),
             func.count(Expense.id).label('count')
+        ).join(
+            Expense, Category.id == Expense.category_id
         ).filter(
-            Expense.user_id == current_user.id
+            Category.user_id == current_user.id
         ).group_by(
-            Expense.category
+            Category.id, Category.name, Category.color, Category.icon
         ).all()
 
         return [
             {
-                "category": item.category,
+                "category_id": item.category_id,
+                "category_name": item.category_name,
+                "color": item.color,
+                "icon": item.icon,
                 "total_amount": float(item.total_amount),
                 "count": item.count
             } for item in summary

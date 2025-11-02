@@ -10,7 +10,7 @@ class IncomeBase(BaseModel):
     date: datetime
     is_recurring: bool = False
     recurring_frequency: Optional[str] = Field(None, max_length=20)
-    category: Optional[str] = Field(None, max_length=100)
+    category_id: Optional[int] = None
     tags: Optional[str] = None
     notes: Optional[str] = None
 
@@ -26,7 +26,7 @@ class IncomeUpdate(BaseModel):
     date: Optional[datetime] = None
     is_recurring: Optional[bool] = None
     recurring_frequency: Optional[str] = Field(None, max_length=20)
-    category: Optional[str] = Field(None, max_length=100)
+    category_id: Optional[int] = None
     tags: Optional[str] = None
     notes: Optional[str] = None
 

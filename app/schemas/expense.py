@@ -6,9 +6,9 @@ class ExpenseBase(BaseModel):
     """Esquema base de gasto"""
     amount: float = Field(..., gt=0)
     description: str = Field(..., min_length=1, max_length=255)
-    category: str = Field(..., min_length=1, max_length=100)
+    category_id: int
     date: datetime
-    payment_method: Optional[str] = Field(None, max_length=50)
+    payment_method_id: Optional[int] = None
     is_recurring: bool = False
     recurring_frequency: Optional[str] = Field(None, max_length=20)
     tags: Optional[str] = None
@@ -22,9 +22,9 @@ class ExpenseUpdate(BaseModel):
     """Esquema para actualizar gasto"""
     amount: Optional[float] = Field(None, gt=0)
     description: Optional[str] = Field(None, min_length=1, max_length=255)
-    category: Optional[str] = Field(None, min_length=1, max_length=100)
+    category_id: Optional[int] = None
     date: Optional[datetime] = None
-    payment_method: Optional[str] = Field(None, max_length=50)
+    payment_method_id: Optional[int] = None
     is_recurring: Optional[bool] = None
     recurring_frequency: Optional[str] = Field(None, max_length=20)
     tags: Optional[str] = None
@@ -47,3 +47,12 @@ class Expense(ExpenseInDBBase):
 class ExpenseResponse(Expense):
     """Esquema de respuesta de gasto"""
     pass
+
+# Import here to avoid circular imports
+try:
+    from app.schemas.category import CategoryResponse
+    from app.schemas.payment_method import PaymentMethodResponse
+except ImportError:
+    # Handle circular imports during schema loading
+    CategoryResponse = None
+    PaymentMethodResponse = None
