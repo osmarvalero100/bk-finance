@@ -16,7 +16,6 @@ class Income(Base):
     date = Column(DateTime(timezone=True), nullable=False)
     is_recurring = Column(Boolean, default=False)
     recurring_frequency = Column(String(20))  # daily, weekly, monthly, yearly
-    tags = Column(Text)  # JSON string para etiquetas
     notes = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -24,3 +23,4 @@ class Income(Base):
     # Relaciones
     user = relationship("User", back_populates="incomes")
     category = relationship("Category", back_populates="incomes")
+    tags = relationship("Tag", secondary="income_tags", back_populates="incomes")

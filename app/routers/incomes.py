@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.models.user import User
 from app.models.income import Income
 from app.models.category import Category
+from app.models.tag import Tag
 from app.schemas.income import IncomeCreate, IncomeUpdate, IncomeResponse
 from app.utils.auth import get_current_active_user
 
@@ -38,11 +39,31 @@ async def create_income(
                     detail="La categoría seleccionada no es válida para ingresos"
                 )
 
-        db_income = Income(**income_data.dict(), user_id=current_user.id)
+        # Verificar etiquetas si se especifican
+        if income_data.tag_ids:
+            tags = db.query(Tag).filter(
+                and_(Tag.id.in_(income_data.tag_ids), Tag.user_id == current_user.id, Tag.is_active == True)
+            ).all()
+
+            if len(tags) != len(income_data.tag_ids):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Una o más etiquetas no encontradas"
+                )
+
+        db_income = Income(**income_data.dict(exclude={'tag_ids'}), user_id=current_user.id)
         db.add(db_income)
+
+        # Agregar etiquetas si se especifican
+        if income_data.tag_ids:
+            tags = db.query(Tag).filter(
+                and_(Tag.id.in_(income_data.tag_ids), Tag.user_id == current_user.id, Tag.is_active == True)
+            ).all()
+            db_income.tags.extend(tags)
+
         db.commit()
         db.refresh(db_income)
-        return IncomeResponse.from_orm(db_income)
+        return IncomeResponse.model_validate(db_income)
     except HTTPException:
         raise
     except Exception as e:
@@ -63,7 +84,7 @@ async def get_incomes(
 ):
     """Obtener lista de ingresos del usuario"""
     try:
-        query = db.query(Income).options(joinedload(Income.category)).filter(Income.user_id == current_user.id)
+        query = db.query(Income).options(joinedload(Income.category), joinedload(Income.tags)).filter(Income.user_id == current_user.id)
 
         if source:
             query = query.filter(Income.source == source)
@@ -72,7 +93,7 @@ async def get_incomes(
             query = query.filter(Income.category_id == category_id)
 
         incomes = query.order_by(desc(Income.date)).offset(skip).limit(limit).all()
-        return [IncomeResponse.from_orm(income) for income in incomes]
+        return [IncomeResponse.model_validate(income) for income in incomes]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -87,7 +108,7 @@ async def get_income(
 ):
     """Obtener ingreso por ID"""
     try:
-        income = db.query(Income).options(joinedload(Income.category)).filter(
+        income = db.query(Income).options(joinedload(Income.category), joinedload(Income.tags)).filter(
             and_(Income.id == income_id, Income.user_id == current_user.id)
         ).first()
 
@@ -97,7 +118,7 @@ async def get_income(
                 detail="Ingreso no encontrado"
             )
 
-        return IncomeResponse.from_orm(income)
+        return IncomeResponse.model_validate(income)
     except HTTPException:
         raise
     except Exception as e:
@@ -144,13 +165,38 @@ async def update_income(
                         detail="La categoría seleccionada no es válida para ingresos"
                     )
 
+        # Verificar etiquetas si se están actualizando
+        if income_data.tag_ids is not None:
+            if income_data.tag_ids:
+                tags = db.query(Tag).filter(
+                    and_(Tag.id.in_(income_data.tag_ids), Tag.user_id == current_user.id, Tag.is_active == True)
+                ).all()
+
+                if len(tags) != len(income_data.tag_ids):
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Una o más etiquetas no encontradas"
+                    )
+
         # Actualizar campos
-        for field, value in income_data.dict(exclude_unset=True).items():
+        update_data = income_data.dict(exclude_unset=True)
+
+        # Manejar etiquetas por separado
+        if 'tag_ids' in update_data:
+            tag_ids = update_data.pop('tag_ids')
+            if tag_ids is not None:
+                tags = db.query(Tag).filter(
+                    and_(Tag.id.in_(tag_ids), Tag.user_id == current_user.id, Tag.is_active == True)
+                ).all()
+                income.tags = tags
+
+        # Actualizar otros campos
+        for field, value in update_data.items():
             setattr(income, field, value)
 
         db.commit()
         db.refresh(income)
-        return IncomeResponse.from_orm(income)
+        return IncomeResponse.model_validate(income)
     except HTTPException:
         raise
     except Exception as e:

@@ -1,6 +1,9 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+
+from app.schemas.category import CategoryResponse
+from app.schemas.tag import TagResponse
 
 class IncomeBase(BaseModel):
     """Esquema base de ingreso"""
@@ -11,7 +14,7 @@ class IncomeBase(BaseModel):
     is_recurring: bool = False
     recurring_frequency: Optional[str] = Field(None, max_length=20)
     category_id: Optional[int] = None
-    tags: Optional[str] = None
+    tag_ids: Optional[List[int]] = None
     notes: Optional[str] = None
 
 class IncomeCreate(IncomeBase):
@@ -27,7 +30,7 @@ class IncomeUpdate(BaseModel):
     is_recurring: Optional[bool] = None
     recurring_frequency: Optional[str] = Field(None, max_length=20)
     category_id: Optional[int] = None
-    tags: Optional[str] = None
+    tag_ids: Optional[List[int]] = None
     notes: Optional[str] = None
 
 class IncomeInDBBase(IncomeBase):
@@ -42,7 +45,11 @@ class IncomeInDBBase(IncomeBase):
 
 class Income(IncomeInDBBase):
     """Esquema de ingreso completo"""
-    pass
+    category: Optional['CategoryResponse'] = None
+    tags: Optional[List['TagResponse']] = None
+
+    class Config:
+        from_attributes = True
 
 class IncomeResponse(Income):
     """Esquema de respuesta de ingreso"""

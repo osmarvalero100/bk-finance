@@ -16,7 +16,6 @@ class Expense(Base):
     date = Column(DateTime(timezone=True), nullable=False)
     is_recurring = Column(Boolean, default=False)
     recurring_frequency = Column(String(20))  # daily, weekly, monthly, yearly
-    tags = Column(Text)  # JSON string para etiquetas
     notes = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -25,3 +24,4 @@ class Expense(Base):
     user = relationship("User", back_populates="expenses")
     category = relationship("Category", back_populates="expenses")
     payment_method = relationship("PaymentMethod", back_populates="expenses")
+    tags = relationship("Tag", secondary="expense_tags", back_populates="expenses")

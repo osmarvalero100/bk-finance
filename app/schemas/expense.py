@@ -2,6 +2,10 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
+from app.schemas.category import CategoryResponse
+from app.schemas.payment_method import PaymentMethodResponse
+from app.schemas.tag import TagResponse
+
 class ExpenseBase(BaseModel):
     """Esquema base de gasto"""
     amount: float = Field(..., gt=0)
@@ -11,7 +15,7 @@ class ExpenseBase(BaseModel):
     payment_method_id: Optional[int] = None
     is_recurring: bool = False
     recurring_frequency: Optional[str] = Field(None, max_length=20)
-    tags: Optional[str] = None
+    tag_ids: Optional[List[int]] = None
     notes: Optional[str] = None
 
 class ExpenseCreate(ExpenseBase):
@@ -27,7 +31,7 @@ class ExpenseUpdate(BaseModel):
     payment_method_id: Optional[int] = None
     is_recurring: Optional[bool] = None
     recurring_frequency: Optional[str] = Field(None, max_length=20)
-    tags: Optional[str] = None
+    tag_ids: Optional[List[int]] = None
     notes: Optional[str] = None
 
 class ExpenseInDBBase(ExpenseBase):
@@ -42,17 +46,13 @@ class ExpenseInDBBase(ExpenseBase):
 
 class Expense(ExpenseInDBBase):
     """Esquema de gasto completo"""
-    pass
+    category: Optional['CategoryResponse'] = None
+    payment_method: Optional['PaymentMethodResponse'] = None
+    tags: Optional[List['TagResponse']] = None
+
+    class Config:
+        from_attributes = True
 
 class ExpenseResponse(Expense):
     """Esquema de respuesta de gasto"""
     pass
-
-# Import here to avoid circular imports
-try:
-    from app.schemas.category import CategoryResponse
-    from app.schemas.payment_method import PaymentMethodResponse
-except ImportError:
-    # Handle circular imports during schema loading
-    CategoryResponse = None
-    PaymentMethodResponse = None

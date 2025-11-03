@@ -11,6 +11,9 @@ Una API REST completa para gestión de finanzas personales desarrollada con Fast
 - ✅ Validación de datos con Pydantic
 - ✅ Arquitectura escalable y mantenible
 - ✅ CORS habilitado para desarrollo
+- ✅ **Categorías personalizables** con colores, íconos y jerarquía
+- ✅ **Métodos de pago personalizables**
+- ✅ **Etiquetas flexibles** para organizar transacciones
 
 ## Tecnologías
 
@@ -99,18 +102,34 @@ curl -X POST "http://localhost:8000/auth/login" \
      -d "username=usuario123&password=contraseña123"
 ```
 
-### 3. Crear gasto (requiere autenticación)
+### 3. Crear categoría (requiere autenticación)
+
+```bash
+curl -X POST "http://localhost:8000/categories/" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -d '{
+        "name": "Alimentación",
+        "description": "Gastos en comida y restaurantes",
+        "color": "#FF5733",
+        "icon": "restaurant",
+        "category_type": "expense"
+      }'
+```
+
+### 4. Crear gasto con categoría (requiere autenticación)
 
 ```bash
 curl -X POST "http://localhost:8000/expenses/" \
-     -H "Content-Type: application/json" \
-     -H "Authorization: Bearer YOUR_TOKEN" \
-     -d '{
-       "amount": 50.00,
-       "description": "Cena en restaurante",
-       "category": "Alimentación",
-       "date": "2024-01-15T20:30:00Z"
-     }'
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -d '{
+        "amount": 50.00,
+        "description": "Cena en restaurante",
+        "category_id": 1,
+        "date": "2024-01-15T20:30:00Z",
+        "tag_ids": [1, 2]
+      }'
 ```
 
 ## Endpoints principales
@@ -119,6 +138,27 @@ curl -X POST "http://localhost:8000/expenses/" \
 - `POST /auth/register` - Registro de usuario
 - `POST /auth/login` - Inicio de sesión
 - `GET /auth/me` - Información del usuario actual
+
+### Categorías
+- `POST /categories/` - Crear categoría
+- `GET /categories/` - Listar categorías con filtros
+- `GET /categories/{id}` - Obtener categoría específica
+- `PUT /categories/{id}` - Actualizar categoría
+- `DELETE /categories/{id}` - Eliminar categoría
+
+### Métodos de Pago
+- `POST /payment-methods/` - Crear método de pago
+- `GET /payment-methods/` - Listar métodos de pago
+- `GET /payment-methods/{id}` - Obtener método específico
+- `PUT /payment-methods/{id}` - Actualizar método
+- `DELETE /payment-methods/{id}` - Eliminar método
+
+### Etiquetas
+- `POST /tags/` - Crear etiqueta
+- `GET /tags/` - Listar etiquetas
+- `GET /tags/{id}` - Obtener etiqueta específica
+- `PUT /tags/{id}` - Actualizar etiqueta
+- `DELETE /tags/{id}` - Eliminar etiqueta
 
 ### Gastos
 - `POST /expenses/` - Crear gasto
@@ -184,6 +224,9 @@ bk-finance/
 │   │   └── __init__.py
 │   ├── models/
 │   │   ├── user.py        # Modelo de usuario
+│   │   ├── category.py    # Modelo de categorías personalizables
+│   │   ├── payment_method.py  # Modelo de métodos de pago
+│   │   ├── tag.py         # Modelo de etiquetas
 │   │   ├── expense.py     # Modelo de gasto
 │   │   ├── income.py      # Modelo de ingreso
 │   │   ├── investment.py  # Modelo de inversión
@@ -192,6 +235,9 @@ bk-finance/
 │   │   └── __init__.py
 │   ├── routers/
 │   │   ├── auth.py        # Endpoints de autenticación
+│   │   ├── categories.py  # Endpoints de categorías
+│   │   ├── payment_methods.py  # Endpoints de métodos de pago
+│   │   ├── tags.py        # Endpoints de etiquetas
 │   │   ├── expenses.py    # Endpoints de gastos
 │   │   ├── incomes.py     # Endpoints de ingresos
 │   │   ├── investments.py # Endpoints de inversiones
@@ -201,6 +247,9 @@ bk-finance/
 │   ├── schemas/
 │   │   ├── user.py        # Esquemas Pydantic de usuario
 │   │   ├── auth.py        # Esquemas Pydantic de autenticación
+│   │   ├── category.py    # Esquemas de categorías
+│   │   ├── payment_method.py  # Esquemas de métodos de pago
+│   │   ├── tag.py         # Esquemas de etiquetas
 │   │   ├── expense.py     # Esquemas Pydantic de gasto
 │   │   ├── income.py      # Esquemas Pydantic de ingreso
 │   │   ├── investment.py  # Esquemas Pydantic de inversión
@@ -219,7 +268,10 @@ bk-finance/
 
 ## Próximas mejoras
 
-- [ ] Tests automatizados
+- [x] **Categorías personalizables** ✅
+- [x] **Métodos de pago personalizables** ✅
+- [x] **Etiquetas flexibles** ✅
+- [ ] Tests automatizados (parcialmente implementados)
 - [ ] Rate limiting
 - [ ] Caching con Redis
 - [ ] Exportación de datos (PDF, Excel)
@@ -227,7 +279,6 @@ bk-finance/
 - [ ] Análisis financieros avanzados
 - [ ] Gráficos y dashboards
 - [ ] API de presupuestos
-- [ ] Categorías personalizables
 - [ ] Importación de datos desde archivos
 
 ## Licencia

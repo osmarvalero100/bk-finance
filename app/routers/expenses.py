@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.expense import Expense
 from app.models.category import Category
 from app.models.payment_method import PaymentMethod
+from app.models.tag import Tag
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from app.utils.auth import get_current_active_user
 
@@ -50,11 +51,31 @@ async def create_expense(
                     detail="Método de pago no encontrado"
                 )
 
-        db_expense = Expense(**expense_data.dict(), user_id=current_user.id)
+        # Verificar etiquetas si se especifican
+        if expense_data.tag_ids:
+            tags = db.query(Tag).filter(
+                and_(Tag.id.in_(expense_data.tag_ids), Tag.user_id == current_user.id, Tag.is_active == True)
+            ).all()
+
+            if len(tags) != len(expense_data.tag_ids):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Una o más etiquetas no encontradas"
+                )
+
+        db_expense = Expense(**expense_data.dict(exclude={'tag_ids'}), user_id=current_user.id)
         db.add(db_expense)
+
+        # Agregar etiquetas si se especifican
+        if expense_data.tag_ids:
+            tags = db.query(Tag).filter(
+                and_(Tag.id.in_(expense_data.tag_ids), Tag.user_id == current_user.id, Tag.is_active == True)
+            ).all()
+            db_expense.tags.extend(tags)
+
         db.commit()
         db.refresh(db_expense)
-        return ExpenseResponse.from_orm(db_expense)
+        return ExpenseResponse.model_validate(db_expense)
     except HTTPException:
         raise
     except Exception as e:
@@ -74,13 +95,13 @@ async def get_expenses(
 ):
     """Obtener lista de gastos del usuario"""
     try:
-        query = db.query(Expense).options(joinedload(Expense.category), joinedload(Expense.payment_method)).filter(Expense.user_id == current_user.id)
+        query = db.query(Expense).options(joinedload(Expense.category), joinedload(Expense.payment_method), joinedload(Expense.tags)).filter(Expense.user_id == current_user.id)
 
         if category_id:
             query = query.filter(Expense.category_id == category_id)
 
         expenses = query.order_by(desc(Expense.date)).offset(skip).limit(limit).all()
-        return [ExpenseResponse.from_orm(expense) for expense in expenses]
+        return [ExpenseResponse.model_validate(expense) for expense in expenses]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -95,7 +116,7 @@ async def get_expense(
 ):
     """Obtener gasto por ID"""
     try:
-        expense = db.query(Expense).options(joinedload(Expense.category), joinedload(Expense.payment_method)).filter(
+        expense = db.query(Expense).options(joinedload(Expense.category), joinedload(Expense.payment_method), joinedload(Expense.tags)).filter(
             and_(Expense.id == expense_id, Expense.user_id == current_user.id)
         ).first()
 
@@ -105,7 +126,7 @@ async def get_expense(
                 detail="Gasto no encontrado"
             )
 
-        return ExpenseResponse.from_orm(expense)
+        return ExpenseResponse.model_validate(expense)
     except HTTPException:
         raise
     except Exception as e:
@@ -164,13 +185,38 @@ async def update_expense(
                         detail="Método de pago no encontrado"
                     )
 
+        # Verificar etiquetas si se están actualizando
+        if expense_data.tag_ids is not None:
+            if expense_data.tag_ids:
+                tags = db.query(Tag).filter(
+                    and_(Tag.id.in_(expense_data.tag_ids), Tag.user_id == current_user.id, Tag.is_active == True)
+                ).all()
+
+                if len(tags) != len(expense_data.tag_ids):
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Una o más etiquetas no encontradas"
+                    )
+
         # Actualizar campos
-        for field, value in expense_data.dict(exclude_unset=True).items():
+        update_data = expense_data.dict(exclude_unset=True)
+
+        # Manejar etiquetas por separado
+        if 'tag_ids' in update_data:
+            tag_ids = update_data.pop('tag_ids')
+            if tag_ids is not None:
+                tags = db.query(Tag).filter(
+                    and_(Tag.id.in_(tag_ids), Tag.user_id == current_user.id, Tag.is_active == True)
+                ).all()
+                expense.tags = tags
+
+        # Actualizar otros campos
+        for field, value in update_data.items():
             setattr(expense, field, value)
 
         db.commit()
         db.refresh(expense)
-        return ExpenseResponse.from_orm(expense)
+        return ExpenseResponse.model_validate(expense)
     except HTTPException:
         raise
     except Exception as e:
