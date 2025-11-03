@@ -33,7 +33,30 @@ class TestFullFlows:
         token = create_access_token(data={"sub": mock_user.username})
         headers = {"Authorization": f"Bearer {token}"}
 
-        # 2. Crear ingresos mensuales
+        # 2. Crear categorías primero
+        # Categoría para ingresos
+        income_category_data = {
+            "name": "Primary Income",
+            "category_type": "income",
+            "description": "Primary income sources"
+        }
+        response = await async_client.post("/categories/", json=income_category_data, headers=headers)
+        assert response.status_code == 201
+        income_category = response.json()
+
+        # Categorías para gastos
+        expense_categories_data = [
+            {"name": "Housing", "category_type": "expense", "description": "Housing expenses"},
+            {"name": "Food", "category_type": "expense", "description": "Food expenses"},
+            {"name": "Transportation", "category_type": "expense", "description": "Transportation expenses"}
+        ]
+        expense_categories = []
+        for cat_data in expense_categories_data:
+            response = await async_client.post("/categories/", json=cat_data, headers=headers)
+            assert response.status_code == 201
+            expense_categories.append(response.json())
+
+        # 3. Crear ingresos mensuales
         income_data = {
             "amount": 5000.00,
             "description": "Monthly salary",
@@ -41,19 +64,19 @@ class TestFullFlows:
             "date": datetime.utcnow().isoformat(),
             "is_recurring": True,
             "recurring_frequency": "monthly",
-            "category": "Primary"
+            "category_id": income_category["id"]
         }
 
         response = await async_client.post("/incomes/", json=income_data, headers=headers)
         assert response.status_code == 201
         income = response.json()
 
-        # 3. Crear gastos mensuales
+        # 4. Crear gastos mensuales
         expenses_data = [
             {
                 "amount": 1500.00,
                 "description": "Rent",
-                "category": "Housing",
+                "category_id": expense_categories[0]["id"],  # Housing
                 "date": datetime.utcnow().isoformat(),
                 "is_recurring": True,
                 "recurring_frequency": "monthly"
@@ -61,7 +84,7 @@ class TestFullFlows:
             {
                 "amount": 400.00,
                 "description": "Groceries",
-                "category": "Food",
+                "category_id": expense_categories[1]["id"],  # Food
                 "date": datetime.utcnow().isoformat(),
                 "is_recurring": True,
                 "recurring_frequency": "monthly"
@@ -69,7 +92,7 @@ class TestFullFlows:
             {
                 "amount": 200.00,
                 "description": "Gas",
-                "category": "Transportation",
+                "category_id": expense_categories[2]["id"],  # Transportation
                 "date": datetime.utcnow().isoformat(),
                 "is_recurring": True,
                 "recurring_frequency": "monthly"
@@ -291,11 +314,21 @@ class TestFullFlows:
         token2 = create_access_token(data={"sub": user2.username})
         headers2 = {"Authorization": f"Bearer {token2}"}
 
+        # Crear categoría para usuario 1
+        category_data = {
+            "name": "Food",
+            "category_type": "expense",
+            "description": "Food expenses"
+        }
+        response = await async_client.post("/categories/", json=category_data, headers=headers1)
+        assert response.status_code == 201
+        category = response.json()
+
         # Crear datos para usuario 1
         expense_data = {
             "amount": 100.00,
             "description": "User 1 expense",
-            "category": "Food",
+            "category_id": category["id"],
             "date": datetime.utcnow().isoformat()
         }
 
@@ -350,7 +383,7 @@ class TestFullFlows:
         invalid_expense_data = {
             "amount": "not_a_number",
             "description": "Test",
-            "category": "Test",
+            "category_id": 99999,  # ID inválido
             "date": datetime.utcnow().isoformat()
         }
         response = await async_client.post("/expenses/", json=invalid_expense_data, headers=headers)
@@ -380,11 +413,20 @@ class TestFullFlows:
         other_token = create_access_token(data={"sub": other_user.username})
         other_headers = {"Authorization": f"Bearer {other_token}"}
 
+        # Crear categoría para el otro usuario
+        other_category_data = {
+            "name": "Food",
+            "category_type": "expense",
+            "description": "Food expenses"
+        }
+        response = await async_client.post("/categories/", json=other_category_data, headers=other_headers)
+        other_category = response.json()
+
         # Crear gasto con el otro usuario
         other_expense_data = {
             "amount": 50.00,
             "description": "Other user's expense",
-            "category": "Food",
+            "category_id": other_category["id"],
             "date": datetime.utcnow().isoformat()
         }
 
@@ -403,7 +445,7 @@ class TestFullFlows:
         test_expense_data = {
             "amount": 100.00,
             "description": "Test expense",
-            "category": "Test",
+            "category_id": 99999,  # ID inválido
             "date": datetime.utcnow().isoformat()
         }
         response = await async_client.post("/expenses/", json=test_expense_data)
@@ -434,11 +476,20 @@ class TestFullFlows:
         token = create_access_token(data={"sub": consistency_user.username})
         headers = {"Authorization": f"Bearer {token}"}
 
+        # Crear categoría
+        category_data = {
+            "name": "Test",
+            "category_type": "expense",
+            "description": "Test category"
+        }
+        response = await async_client.post("/categories/", json=category_data, headers=headers)
+        category = response.json()
+
         # Crear gasto
         expense_data = {
             "amount": 100.00,
             "description": "Consistency test expense",
-            "category": "Test",
+            "category_id": category["id"],
             "date": datetime.utcnow().isoformat()
         }
 
@@ -510,13 +561,22 @@ class TestFullFlows:
         token = create_access_token(data={"sub": pagination_user.username})
         headers = {"Authorization": f"Bearer {token}"}
 
+        # Crear categoría para gastos
+        expense_category_data = {
+            "name": "Test",
+            "category_type": "expense",
+            "description": "Test category"
+        }
+        response = await async_client.post("/categories/", json=expense_category_data, headers=headers)
+        expense_category = response.json()
+
         # Crear múltiples elementos de cada tipo
         for i in range(5):
             # Gastos
             expense_data = {
                 "amount": 10.00 + i,
                 "description": f"Expense {i}",
-                "category": "Test",
+                "category_id": expense_category["id"],
                 "date": datetime.utcnow().isoformat()
             }
             await async_client.post("/expenses/", json=expense_data, headers=headers)
@@ -608,12 +668,21 @@ class TestFullFlows:
         token = create_access_token(data={"sub": concurrent_user.username})
         headers = {"Authorization": f"Bearer {token}"}
 
+        # Crear categoría para gastos concurrentes
+        concurrent_category_data = {
+            "name": "Test",
+            "category_type": "expense",
+            "description": "Test category"
+        }
+        response = await async_client.post("/categories/", json=concurrent_category_data, headers=headers)
+        concurrent_category = response.json()
+
         # Crear múltiples gastos (simulado como secuencial por simplicidad)
         for i in range(5):  # Reducir a 5 para evitar problemas
             expense_data = {
                 "amount": 10.00 + i,
                 "description": f"Concurrent expense {i}",
-                "category": "Test",
+                "category_id": concurrent_category["id"],
                 "date": datetime.utcnow().isoformat()
             }
             response = await async_client.post("/expenses/", json=expense_data, headers=headers)

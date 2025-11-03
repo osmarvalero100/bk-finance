@@ -15,7 +15,7 @@ class ExpenseBase(BaseModel):
     payment_method_id: Optional[int] = None
     is_recurring: bool = False
     recurring_frequency: Optional[str] = Field(None, max_length=20)
-    tag_ids: Optional[List[int]] = None
+    tag_ids: List[int] = []
     notes: Optional[str] = None
 
 class ExpenseCreate(ExpenseBase):
@@ -31,7 +31,7 @@ class ExpenseUpdate(BaseModel):
     payment_method_id: Optional[int] = None
     is_recurring: Optional[bool] = None
     recurring_frequency: Optional[str] = Field(None, max_length=20)
-    tag_ids: Optional[List[int]] = None
+    tag_ids: List[int] = []
     notes: Optional[str] = None
 
 class ExpenseInDBBase(ExpenseBase):

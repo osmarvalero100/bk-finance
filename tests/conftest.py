@@ -4,7 +4,6 @@ from httpx import AsyncClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-import asyncio
 import os
 from datetime import datetime, timedelta
 
@@ -13,7 +12,6 @@ os.environ["DATABASE_URL"] = "sqlite:///./test_finance.db"
 os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only"
 os.environ["DEBUG"] = "True"
 
-from app.core.config import settings
 from app.core.database import Base, get_db
 from app.main import app
 from app.models.user import User
@@ -109,7 +107,7 @@ def test_expense(db_session, test_user, test_category):
         amount=100.50,
         description="Test expense",
         date=datetime.utcnow(),
-        payment_method="Credit Card"
+        payment_method_id=None
     )
     db_session.add(expense)
     db_session.commit()

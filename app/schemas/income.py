@@ -14,7 +14,7 @@ class IncomeBase(BaseModel):
     is_recurring: bool = False
     recurring_frequency: Optional[str] = Field(None, max_length=20)
     category_id: Optional[int] = None
-    tag_ids: Optional[List[int]] = None
+    tag_ids: List[int] = []
     notes: Optional[str] = None
 
 class IncomeCreate(IncomeBase):
@@ -30,7 +30,7 @@ class IncomeUpdate(BaseModel):
     is_recurring: Optional[bool] = None
     recurring_frequency: Optional[str] = Field(None, max_length=20)
     category_id: Optional[int] = None
-    tag_ids: Optional[List[int]] = None
+    tag_ids: List[int] = []
     notes: Optional[str] = None
 
 class IncomeInDBBase(IncomeBase):

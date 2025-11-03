@@ -63,7 +63,7 @@ async def create_expense(
                     detail="Una o más etiquetas no encontradas"
                 )
 
-        db_expense = Expense(**expense_data.dict(exclude={'tag_ids'}), user_id=current_user.id)
+        db_expense = Expense(**expense_data.model_dump(exclude={'tag_ids'}), user_id=current_user.id)
         db.add(db_expense)
 
         # Agregar etiquetas si se especifican
@@ -75,6 +75,8 @@ async def create_expense(
 
         db.commit()
         db.refresh(db_expense)
+        # Load relationships for response
+        db.refresh(db_expense, ['category', 'payment_method', 'tags'])
         return ExpenseResponse.model_validate(db_expense)
     except HTTPException:
         raise
@@ -199,7 +201,7 @@ async def update_expense(
                     )
 
         # Actualizar campos
-        update_data = expense_data.dict(exclude_unset=True)
+        update_data = expense_data.model_dump(exclude_unset=True)
 
         # Manejar etiquetas por separado
         if 'tag_ids' in update_data:

@@ -16,7 +16,8 @@ class TestIncomeEndpoints:
             "date": datetime.utcnow().isoformat(),
             "is_recurring": True,
             "recurring_frequency": "monthly",
-            "category": "Primary",
+            "category_id": None,
+            "tag_ids": [],
             "notes": "Main income source"
         }
 
@@ -33,7 +34,8 @@ class TestIncomeEndpoints:
         assert data["source"] == "Job"
         assert data["is_recurring"] is True
         assert data["recurring_frequency"] == "monthly"
-        assert data["category"] == "Primary"
+        assert data["category_id"] is None
+        assert data["tag_ids"] == []
         assert data["notes"] == "Main income source"
         assert "id" in data
         assert "user_id" in data
@@ -61,7 +63,8 @@ class TestIncomeEndpoints:
         assert data["description"] == "Freelance project"
         assert data["source"] == "Freelance"
         assert data["is_recurring"] is False  # Default value
-        assert data["category"] is None  # Optional field
+        assert data["category_id"] is None  # Optional field
+        assert data["tag_ids"] == []  # Default empty list
 
     @pytest.mark.asyncio
     async def test_create_income_invalid_amount(self, async_client: AsyncClient, auth_headers):
@@ -150,7 +153,7 @@ class TestIncomeEndpoints:
             "amount": 1500.00,
             "description": "Updated salary",
             "source": "Job Updated",
-            "category": "Primary Updated"
+            "category_id": None
         }
 
         response = await async_client.put(
@@ -165,7 +168,7 @@ class TestIncomeEndpoints:
         assert data["amount"] == 1500.00
         assert data["description"] == "Updated salary"
         assert data["source"] == "Job Updated"
-        assert data["category"] == "Primary Updated"
+        assert data["category_id"] is None
 
     @pytest.mark.asyncio
     async def test_update_income_partial(self, async_client: AsyncClient, auth_headers, test_income):
@@ -255,18 +258,19 @@ class TestIncomeEndpoints:
         assert source_found, f"Source {test_income.source} not found in summary"
 
     @pytest.mark.asyncio
-    async def test_incomes_pagination(self, async_client: AsyncClient, auth_headers, db_session):
+    async def test_incomes_pagination(self, async_client: AsyncClient, auth_headers, db_session, test_user):
         """Test paginación de ingresos"""
         # Crear múltiples ingresos
         from app.models.income import Income
 
         for i in range(5):
             income = Income(
-                user_id=1,  # Asumiendo que test_user tiene id=1
+                user_id=test_user.id,
                 amount=100.00 + i * 50,
                 description=f"Test income {i}",
                 source="Test Source",
-                date=datetime.utcnow()
+                date=datetime.utcnow(),
+                category_id=None
             )
             db_session.add(income)
         db_session.commit()
@@ -298,7 +302,7 @@ class TestIncomeEndpoints:
             "description": "Side hustle income",
             "source": "Side Hustle",
             "date": datetime.utcnow().isoformat(),
-            "tags": '["side-hustle", "extra-income"]'
+            "tag_ids": []
         }
 
         response = await async_client.post(
@@ -309,4 +313,4 @@ class TestIncomeEndpoints:
 
         assert response.status_code == 201
         data = response.json()
-        assert data["tags"] == '["side-hustle", "extra-income"]'
+        assert data["tag_ids"] == []

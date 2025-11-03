@@ -51,7 +51,7 @@ async def create_income(
                     detail="Una o más etiquetas no encontradas"
                 )
 
-        db_income = Income(**income_data.dict(exclude={'tag_ids'}), user_id=current_user.id)
+        db_income = Income(**income_data.model_dump(exclude={'tag_ids'}), user_id=current_user.id)
         db.add(db_income)
 
         # Agregar etiquetas si se especifican
@@ -63,6 +63,8 @@ async def create_income(
 
         db.commit()
         db.refresh(db_income)
+        # Load relationships for response
+        db.refresh(db_income, ['category', 'tags'])
         return IncomeResponse.model_validate(db_income)
     except HTTPException:
         raise
@@ -179,7 +181,7 @@ async def update_income(
                     )
 
         # Actualizar campos
-        update_data = income_data.dict(exclude_unset=True)
+        update_data = income_data.model_dump(exclude_unset=True)
 
         # Manejar etiquetas por separado
         if 'tag_ids' in update_data:
