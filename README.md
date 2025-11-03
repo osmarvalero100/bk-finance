@@ -271,7 +271,7 @@ bk-finance/
 - [x] **Categorías personalizables** ✅
 - [x] **Métodos de pago personalizables** ✅
 - [x] **Etiquetas flexibles** ✅
-- [ ] Tests automatizados (parcialmente implementados)
+- [x] Tests automatizados ✅
 - [ ] Rate limiting
 - [ ] Caching con Redis
 - [ ] Exportación de datos (PDF, Excel)
