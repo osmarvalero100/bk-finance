@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, UTC, timedelta, UTC
 from app.utils.auth import (
     create_access_token,
     verify_token
@@ -97,7 +97,7 @@ class TestAuthUtils:
             "sub": "complex_user",
             "role": "admin",
             "permissions": ["read", "write", "delete"],
-            "exp": datetime.utcnow() + timedelta(minutes=30)
+            "exp": datetime.now(UTC) + timedelta(minutes=30)
         }
         token = create_access_token(complex_data)
 

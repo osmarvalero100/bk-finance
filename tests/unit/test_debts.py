@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from datetime import datetime
+from datetime import UTC
 from sqlalchemy.orm import Session
 
 class TestDebtEndpoints:
@@ -18,8 +19,8 @@ class TestDebtEndpoints:
             "interest_rate": 0.06,
             "minimum_payment": 450.00,
             "payment_due_date": 15,
-            "loan_start_date": datetime.utcnow().isoformat(),
-            "expected_end_date": datetime.utcnow().replace(year=datetime.utcnow().year + 4).isoformat(),
+            "loan_start_date": datetime.now(UTC).isoformat(),
+            "expected_end_date": datetime.now(UTC).replace(year=datetime.now(UTC).year + 4).isoformat(),
             "is_paid_off": False,
             "currency": "USD",
             "notes": "Car loan for Honda Civic"
@@ -58,7 +59,7 @@ class TestDebtEndpoints:
             "current_balance": 5000.00,
             "interest_rate": 0.0,
             "minimum_payment": 250.00,
-            "loan_start_date": datetime.utcnow().isoformat()
+            "loan_start_date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post(
@@ -89,7 +90,7 @@ class TestDebtEndpoints:
             "current_balance": 500.00,
             "interest_rate": 0.05,
             "minimum_payment": 50.00,
-            "loan_start_date": datetime.utcnow().isoformat()
+            "loan_start_date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post(
@@ -278,7 +279,7 @@ class TestDebtEndpoints:
             current_balance=0.00,
             interest_rate=0.05,
             minimum_payment=50.00,
-            loan_start_date=datetime.utcnow(),
+            loan_start_date=datetime.now(UTC),
             is_paid_off=True
         )
         db_session.add(paid_debt)
@@ -345,7 +346,7 @@ class TestDebtEndpoints:
                 current_balance=800.00 + i * 80,
                 interest_rate=0.05,
                 minimum_payment=50.00 + i * 5,
-                loan_start_date=datetime.utcnow()
+                loan_start_date=datetime.now(UTC)
             )
             db_session.add(debt)
         db_session.commit()
@@ -380,7 +381,7 @@ class TestDebtEndpoints:
             "current_balance": 280000.00,
             "interest_rate": 0.045,
             "minimum_payment": 1500.00,
-            "loan_start_date": datetime.utcnow().isoformat(),
+            "loan_start_date": datetime.now(UTC).isoformat(),
             "collateral": "House at 123 Main St"
         }
 

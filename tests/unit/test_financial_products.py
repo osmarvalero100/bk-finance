@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from datetime import datetime
+from datetime import UTC
 from sqlalchemy.orm import Session
 
 class TestFinancialProductEndpoints:
@@ -19,7 +20,7 @@ class TestFinancialProductEndpoints:
             "minimum_balance": 100.00,
             "monthly_fee": 12.00,
             "is_active": True,
-            "opening_date": datetime.utcnow().isoformat(),
+            "opening_date": datetime.now(UTC).isoformat(),
             "currency": "USD",
             "notes": "Primary checking account"
         }
@@ -320,7 +321,7 @@ class TestFinancialProductEndpoints:
     @pytest.mark.asyncio
     async def test_create_financial_product_loan(self, async_client: AsyncClient, auth_headers):
         """Test crear producto financiero tipo préstamo"""
-        future_date = datetime.utcnow().replace(year=datetime.utcnow().year + 10)
+        future_date = datetime.now(UTC).replace(year=datetime.now(UTC).year + 10)
         product_data = {
             "name": "Home Mortgage",
             "product_type": "mortgage",
@@ -341,5 +342,5 @@ class TestFinancialProductEndpoints:
         assert response.status_code == 201
         data = response.json()
         assert data["product_type"] == "mortgage"
-        assert data["maturity_date"] == future_date.isoformat()
+        assert data["maturity_date"] == future_date.isoformat().replace('+00:00', '')
         assert data["monthly_fee"] == 1200.00

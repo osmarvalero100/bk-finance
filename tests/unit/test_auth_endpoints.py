@@ -104,7 +104,7 @@ class TestAuthEndpoints:
             "password": "testpassword123"
         }
 
-        response = await async_client.post("/auth/login", data=login_data)
+        response = await async_client.post("/auth/login", data=login_data, headers={"Content-Type": "application/x-www-form-urlencoded"})
 
         assert response.status_code == 200
         data = response.json()
@@ -120,7 +120,7 @@ class TestAuthEndpoints:
             "password": "testpassword123"
         }
 
-        response = await async_client.post("/auth/login", data=login_data)
+        response = await async_client.post("/auth/login", data=login_data, headers={"Content-Type": "application/x-www-form-urlencoded"})
 
         assert response.status_code == 401
         data = response.json()
@@ -134,7 +134,7 @@ class TestAuthEndpoints:
             "password": "wrongpassword"
         }
 
-        response = await async_client.post("/auth/login", data=login_data)
+        response = await async_client.post("/auth/login", data=login_data, headers={"Content-Type": "application/x-www-form-urlencoded"})
 
         assert response.status_code == 401
         data = response.json()
@@ -164,7 +164,7 @@ class TestAuthEndpoints:
             "password": "testpassword123"
         }
 
-        response = await async_client.post("/auth/login", data=login_data)
+        response = await async_client.post("/auth/login", data=login_data, headers={"Content-Type": "application/x-www-form-urlencoded"})
 
         # Current implementation returns 401 Unauthorized when credentials are invalid
         assert response.status_code in (400, 401)

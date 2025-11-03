@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 # Configurar variables de entorno para tests
 os.environ["DATABASE_URL"] = "sqlite:///./test_finance.db"
@@ -106,7 +106,7 @@ def test_expense(db_session, test_user, test_category):
         category_id=test_category.id,
         amount=100.50,
         description="Test expense",
-        date=datetime.utcnow(),
+        date=datetime.now(UTC),
         payment_method_id=None
     )
     db_session.add(expense)
@@ -154,7 +154,7 @@ def test_investment(db_session, test_user):
         investment_type="stocks",
         amount_invested=1000.00,
         current_value=1100.00,
-        purchase_date=datetime.utcnow(),
+        purchase_date=datetime.now(UTC),
         quantity=10,
         purchase_price=100.00,
         current_price=110.00,
@@ -178,7 +178,7 @@ def test_financial_product(db_session, test_user):
         balance=5000.00,
         interest_rate=0.02,
         is_active=True,
-        opening_date=datetime.utcnow()
+        opening_date=datetime.now(UTC)
     )
     db_session.add(product)
     db_session.commit()
@@ -197,7 +197,7 @@ def test_debt(db_session, test_user):
         current_balance=8000.00,
         interest_rate=0.05,
         minimum_payment=500.00,
-        loan_start_date=datetime.utcnow(),
+        loan_start_date=datetime.now(UTC),
         is_paid_off=False
     )
     db_session.add(debt)

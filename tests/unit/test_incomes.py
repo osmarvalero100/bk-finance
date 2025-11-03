@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from datetime import datetime
+from datetime import UTC
 from sqlalchemy.orm import Session
 
 class TestIncomeEndpoints:
@@ -13,7 +14,7 @@ class TestIncomeEndpoints:
             "amount": 2500.00,
             "description": "Monthly salary",
             "source": "Job",
-            "date": datetime.utcnow().isoformat(),
+            "date": datetime.now(UTC).isoformat(),
             "is_recurring": True,
             "recurring_frequency": "monthly",
             "category_id": None,
@@ -48,7 +49,7 @@ class TestIncomeEndpoints:
             "amount": 100.00,
             "description": "Freelance project",
             "source": "Freelance",
-            "date": datetime.utcnow().isoformat()
+            "date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post(
@@ -73,7 +74,7 @@ class TestIncomeEndpoints:
             "amount": 0,  # Monto cero
             "description": "Test income",
             "source": "Test",
-            "date": datetime.utcnow().isoformat()
+            "date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post(
@@ -269,7 +270,7 @@ class TestIncomeEndpoints:
                 amount=100.00 + i * 50,
                 description=f"Test income {i}",
                 source="Test Source",
-                date=datetime.utcnow(),
+                date=datetime.now(UTC),
                 category_id=None
             )
             db_session.add(income)
@@ -301,7 +302,7 @@ class TestIncomeEndpoints:
             "amount": 500.00,
             "description": "Side hustle income",
             "source": "Side Hustle",
-            "date": datetime.utcnow().isoformat(),
+            "date": datetime.now(UTC).isoformat(),
             "tag_ids": []
         }
 

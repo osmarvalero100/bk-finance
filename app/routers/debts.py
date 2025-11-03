@@ -236,9 +236,9 @@ async def mark_debt_as_paid_off(
                 detail="La deuda ya está marcada como pagada"
             )
 
-        from datetime import datetime
+        from datetime import datetime, UTC
         debt.is_paid_off = True
-        debt.paid_off_date = datetime.utcnow()
+        debt.paid_off_date = datetime.now(UTC)
         debt.current_balance = 0
 
         db.commit()

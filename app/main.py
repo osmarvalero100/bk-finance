@@ -12,8 +12,8 @@ from app.routers import auth, expenses, incomes, investments, financial_products
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Crear las tablas en la base de datos
-Base.metadata.create_all(bind=engine)
+# Crear las tablas en la base de datos (solo en desarrollo)
+# Base.metadata.create_all(bind=engine)
 
 # Crear aplicación FastAPI
 app = FastAPI(

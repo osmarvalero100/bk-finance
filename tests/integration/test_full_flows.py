@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from datetime import datetime
+from datetime import UTC
 from sqlalchemy.orm import Session
 
 class TestFullFlows:
@@ -61,7 +62,7 @@ class TestFullFlows:
             "amount": 5000.00,
             "description": "Monthly salary",
             "source": "Job",
-            "date": datetime.utcnow().isoformat(),
+            "date": datetime.now(UTC).isoformat(),
             "is_recurring": True,
             "recurring_frequency": "monthly",
             "category_id": income_category["id"]
@@ -77,7 +78,7 @@ class TestFullFlows:
                 "amount": 1500.00,
                 "description": "Rent",
                 "category_id": expense_categories[0]["id"],  # Housing
-                "date": datetime.utcnow().isoformat(),
+                "date": datetime.now(UTC).isoformat(),
                 "is_recurring": True,
                 "recurring_frequency": "monthly"
             },
@@ -85,7 +86,7 @@ class TestFullFlows:
                 "amount": 400.00,
                 "description": "Groceries",
                 "category_id": expense_categories[1]["id"],  # Food
-                "date": datetime.utcnow().isoformat(),
+                "date": datetime.now(UTC).isoformat(),
                 "is_recurring": True,
                 "recurring_frequency": "monthly"
             },
@@ -93,7 +94,7 @@ class TestFullFlows:
                 "amount": 200.00,
                 "description": "Gas",
                 "category_id": expense_categories[2]["id"],  # Transportation
-                "date": datetime.utcnow().isoformat(),
+                "date": datetime.now(UTC).isoformat(),
                 "is_recurring": True,
                 "recurring_frequency": "monthly"
             }
@@ -137,7 +138,7 @@ class TestFullFlows:
             "investment_type": "mutual_fund",
             "amount_invested": 3000.00,
             "current_value": 3300.00,
-            "purchase_date": datetime.utcnow().isoformat(),
+            "purchase_date": datetime.now(UTC).isoformat(),
             "quantity": 30,
             "purchase_price": 100.00,
             "current_price": 110.00,
@@ -159,7 +160,7 @@ class TestFullFlows:
             "current_balance": 22000.00,
             "interest_rate": 0.045,
             "minimum_payment": 250.00,
-            "loan_start_date": datetime.utcnow().isoformat(),
+            "loan_start_date": datetime.now(UTC).isoformat(),
             "is_paid_off": False
         }
 
@@ -329,7 +330,7 @@ class TestFullFlows:
             "amount": 100.00,
             "description": "User 1 expense",
             "category_id": category["id"],
-            "date": datetime.utcnow().isoformat()
+            "date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post("/expenses/", json=expense_data, headers=headers1)
@@ -384,7 +385,7 @@ class TestFullFlows:
             "amount": "not_a_number",
             "description": "Test",
             "category_id": 99999,  # ID inválido
-            "date": datetime.utcnow().isoformat()
+            "date": datetime.now(UTC).isoformat()
         }
         response = await async_client.post("/expenses/", json=invalid_expense_data, headers=headers)
         assert response.status_code == 422
@@ -427,7 +428,7 @@ class TestFullFlows:
             "amount": 50.00,
             "description": "Other user's expense",
             "category_id": other_category["id"],
-            "date": datetime.utcnow().isoformat()
+            "date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post("/expenses/", json=other_expense_data, headers=other_headers)
@@ -446,7 +447,7 @@ class TestFullFlows:
             "amount": 100.00,
             "description": "Test expense",
             "category_id": 99999,  # ID inválido
-            "date": datetime.utcnow().isoformat()
+            "date": datetime.now(UTC).isoformat()
         }
         response = await async_client.post("/expenses/", json=test_expense_data)
         assert response.status_code == 403
@@ -490,7 +491,7 @@ class TestFullFlows:
             "amount": 100.00,
             "description": "Consistency test expense",
             "category_id": category["id"],
-            "date": datetime.utcnow().isoformat()
+            "date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post("/expenses/", json=expense_data, headers=headers)
@@ -501,7 +502,7 @@ class TestFullFlows:
             "amount": 1000.00,
             "description": "Consistency test income",
             "source": "Test Job",
-            "date": datetime.utcnow().isoformat()
+            "date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post("/incomes/", json=income_data, headers=headers)
@@ -577,7 +578,7 @@ class TestFullFlows:
                 "amount": 10.00 + i,
                 "description": f"Expense {i}",
                 "category_id": expense_category["id"],
-                "date": datetime.utcnow().isoformat()
+                "date": datetime.now(UTC).isoformat()
             }
             await async_client.post("/expenses/", json=expense_data, headers=headers)
 
@@ -586,7 +587,7 @@ class TestFullFlows:
                 "amount": 100.00 + i * 10,
                 "description": f"Income {i}",
                 "source": "Test",
-                "date": datetime.utcnow().isoformat()
+                "date": datetime.now(UTC).isoformat()
             }
             await async_client.post("/incomes/", json=income_data, headers=headers)
 
@@ -595,7 +596,7 @@ class TestFullFlows:
                 "name": f"Investment {i}",
                 "investment_type": "stocks",
                 "amount_invested": 1000.00 + i * 100,
-                "purchase_date": datetime.utcnow().isoformat()
+                "purchase_date": datetime.now(UTC).isoformat()
             }
             await async_client.post("/investments/", json=investment_data, headers=headers)
 
@@ -617,7 +618,7 @@ class TestFullFlows:
                 "current_balance": 800.00 + i * 80,
                 "interest_rate": 0.05,
                 "minimum_payment": 50.00 + i * 5,
-                "loan_start_date": datetime.utcnow().isoformat()
+                "loan_start_date": datetime.now(UTC).isoformat()
             }
             await async_client.post("/debts/", json=debt_data, headers=headers)
 
@@ -683,7 +684,7 @@ class TestFullFlows:
                 "amount": 10.00 + i,
                 "description": f"Concurrent expense {i}",
                 "category_id": concurrent_category["id"],
-                "date": datetime.utcnow().isoformat()
+                "date": datetime.now(UTC).isoformat()
             }
             response = await async_client.post("/expenses/", json=expense_data, headers=headers)
             assert response.status_code == 201

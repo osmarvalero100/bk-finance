@@ -1,6 +1,7 @@
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Form
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -91,9 +92,13 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         )
 
 @router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login(
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
     """Iniciar sesión"""
-    user = authenticate_user(db, form_data.username, form_data.password)
+    user = authenticate_user(db, username, password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

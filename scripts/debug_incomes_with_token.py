@@ -30,7 +30,7 @@ try:
         "amount": 5000.00,
         "description": "Monthly salary",
         "source": "Job",
-        "date": datetime.utcnow().isoformat(),
+        "date": datetime.now(UTC).isoformat(),
         "is_recurring": True,
         "recurring_frequency": "monthly",
         "category": "Primary"

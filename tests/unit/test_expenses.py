@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from datetime import datetime
+from datetime import UTC
 from sqlalchemy.orm import Session
 
 class TestExpenseEndpoints:
@@ -13,7 +14,7 @@ class TestExpenseEndpoints:
             "amount": 50.75,
             "description": "Test expense description",
             "category_id": test_category.id,
-            "date": datetime.utcnow().isoformat(),
+            "date": datetime.now(UTC).isoformat(),
             "payment_method_id": None,
             "is_recurring": False,
             "tag_ids": [],
@@ -49,7 +50,7 @@ class TestExpenseEndpoints:
             "amount": -10,  # Monto negativo
             "description": "Test expense",
             "category_id": test_category.id,
-            "date": datetime.utcnow().isoformat(),
+            "date": datetime.now(UTC).isoformat(),
             "tag_ids": []
         }
 
@@ -186,7 +187,7 @@ class TestExpenseEndpoints:
             category_id=other_category.id,
             amount=100.00,
             description="Other user's expense",
-            date=datetime.utcnow()
+            date=datetime.now(UTC)
         )
         db_session.add(other_expense)
         db_session.commit()
@@ -330,7 +331,7 @@ class TestExpenseEndpoints:
                 category_id=pagination_category.id,
                 amount=10.00 + i,
                 description=f"Test expense {i}",
-                date=datetime.utcnow(),
+                date=datetime.now(UTC),
                 payment_method_id=None
             )
             db_session.add(expense)
@@ -373,7 +374,7 @@ class TestExpenseEndpoints:
             "amount": 100.00,
             "description": "Monthly subscription",
             "category_id": services_category.id,
-            "date": datetime.utcnow().isoformat(),
+            "date": datetime.now(UTC).isoformat(),
             "is_recurring": True,
             "recurring_frequency": "monthly",
             "tag_ids": []

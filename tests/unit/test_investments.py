@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from datetime import datetime
+from datetime import UTC
 from sqlalchemy.orm import Session
 
 class TestInvestmentEndpoints:
@@ -15,7 +16,7 @@ class TestInvestmentEndpoints:
             "investment_type": "stocks",
             "amount_invested": 5000.00,
             "current_value": 5500.00,
-            "purchase_date": datetime.utcnow().isoformat(),
+            "purchase_date": datetime.now(UTC).isoformat(),
             "quantity": 50,
             "purchase_price": 100.00,
             "current_price": 110.00,
@@ -60,7 +61,7 @@ class TestInvestmentEndpoints:
             "name": "Bitcoin",
             "investment_type": "crypto",
             "amount_invested": 1000.00,
-            "purchase_date": datetime.utcnow().isoformat()
+            "purchase_date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post(
@@ -84,7 +85,7 @@ class TestInvestmentEndpoints:
             "name": "Test Investment",
             "investment_type": "stocks",
             "amount_invested": -100,  # Monto negativo
-            "purchase_date": datetime.utcnow().isoformat()
+            "purchase_date": datetime.now(UTC).isoformat()
         }
 
         response = await async_client.post(
@@ -295,7 +296,7 @@ class TestInvestmentEndpoints:
                 name=f"Test Investment {i}",
                 investment_type="stocks",
                 amount_invested=1000.00 + i * 100,
-                purchase_date=datetime.utcnow()
+                purchase_date=datetime.now(UTC)
             )
             db_session.add(investment)
         db_session.commit()
@@ -322,12 +323,12 @@ class TestInvestmentEndpoints:
     @pytest.mark.asyncio
     async def test_create_investment_with_maturity_date(self, async_client: AsyncClient, auth_headers):
         """Test crear inversión con fecha de vencimiento"""
-        future_date = datetime.utcnow().replace(year=datetime.utcnow().year + 5)
+        future_date = datetime.now(UTC).replace(year=datetime.now(UTC).year + 5)
         investment_data = {
             "name": "5-Year Bond",
             "investment_type": "bonds",
             "amount_invested": 10000.00,
-            "purchase_date": datetime.utcnow().isoformat(),
+            "purchase_date": datetime.now(UTC).isoformat(),
             "maturity_date": future_date.isoformat(),
             "risk_level": "low"
         }
@@ -340,5 +341,5 @@ class TestInvestmentEndpoints:
 
         assert response.status_code == 201
         data = response.json()
-        assert data["maturity_date"] == future_date.isoformat()
+        assert data["maturity_date"] == future_date.isoformat().replace('+00:00', '')
         assert data["risk_level"] == "low"
