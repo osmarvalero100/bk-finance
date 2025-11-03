@@ -14,6 +14,7 @@ Una API REST completa para gestión de finanzas personales desarrollada con Fast
 - ✅ **Categorías personalizables** con colores, íconos y jerarquía
 - ✅ **Métodos de pago personalizables**
 - ✅ **Etiquetas flexibles** para organizar transacciones
+- ✅ **API de presupuestos** para planificación financiera
 
 ## Tecnologías
 
@@ -46,16 +47,49 @@ source venv/bin/activate  # En Windows: venv\\Scripts\\activate
 pip install -r requirements.txt
 ```
 
-### 4. Configurar base de datos
+### 4. Configurar variables de entorno
 
-1. Crear una base de datos MySQL
-2. Actualizar las credenciales en el archivo `.env`:
+1. Copiar el archivo de ejemplo de variables de entorno:
 
+```bash
+cp .env.example .env
+```
+
+2. Editar el archivo `.env` con tus configuraciones específicas:
+
+```bash
+nano .env  # o tu editor preferido
+```
+
+#### Variables de entorno disponibles:
+
+| Variable | Descripción | Valor por defecto | Requerido |
+|----------|-------------|-------------------|-----------|
+| `DATABASE_URL` | URL de conexión a la base de datos | `mysql+pymysql://username:password@localhost/finance_db` | ✅ |
+| `SECRET_KEY` | Clave secreta para JWT (cambiar en producción) | `your-super-secret-key-change-this-in-production` | ✅ |
+| `ALGORITHM` | Algoritmo de encriptación JWT | `HS256` | ❌ |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Minutos de expiración del token | `30` | ❌ |
+| `API_HOST` | Host del servidor API | `localhost` | ❌ |
+| `API_PORT` | Puerto del servidor API | `8000` | ❌ |
+| `DEBUG` | Modo debug (desarrollo/producción) | `True` | ❌ |
+| `BACKEND_CORS_ORIGINS` | Orígenes permitidos para CORS | `["http://localhost:3000", "http://localhost:8080"]` | ❌ |
+
+#### Configuración de base de datos:
+
+La variable `DATABASE_URL` soporta diferentes motores de base de datos:
+
+- **MySQL**: `mysql+pymysql://usuario:contraseña@host:puerto/nombre_db`
+- **PostgreSQL**: `postgresql://usuario:contraseña@host:puerto/nombre_db`
+- **SQLite**: `sqlite:///./nombre_db.db`
+
+**Ejemplo para MySQL:**
 ```env
-DATABASE_URL=mysql+pymysql://username:password@localhost/finance_db
-SECRET_KEY=your-super-secret-key-change-this-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+DATABASE_URL=mysql+pymysql://root:mipassword@localhost:3306/finance_db
+```
+
+**Ejemplo para desarrollo con SQLite:**
+```env
+DATABASE_URL=sqlite:///./finance_dev.db
 ```
 
 ### 5. Ejecutar migraciones
@@ -204,6 +238,17 @@ curl -X POST "http://localhost:8000/expenses/" \
 - `GET /debts/summary/type` - Resumen por tipo
 - `GET /debts/balance/total` - Balance total de deudas
 
+### Presupuestos
+- `POST /budgets/` - Crear presupuesto
+- `GET /budgets/` - Listar presupuestos
+- `GET /budgets/{id}` - Obtener presupuesto específico
+- `PUT /budgets/{id}` - Actualizar presupuesto
+- `DELETE /budgets/{id}` - Eliminar presupuesto
+- `POST /budgets/{id}/items/` - Crear ítem de presupuesto
+- `PUT /budgets/{id}/items/{item_id}` - Actualizar ítem de presupuesto
+- `DELETE /budgets/{id}/items/{item_id}` - Eliminar ítem de presupuesto
+- `GET /budgets/{id}/comparison` - Comparación presupuesto vs gastos reales
+
 ## Seguridad
 
 - Todos los endpoints (excepto registro) requieren autenticación JWT
@@ -271,6 +316,7 @@ bk-finance/
 - [x] **Categorías personalizables** ✅
 - [x] **Métodos de pago personalizables** ✅
 - [x] **Etiquetas flexibles** ✅
+- [x] **API de presupuestos** ✅
 - [x] Tests automatizados ✅
 - [ ] Rate limiting
 - [ ] Caching con Redis
@@ -278,7 +324,7 @@ bk-finance/
 - [ ] Notificaciones por email
 - [ ] Análisis financieros avanzados
 - [ ] Gráficos y dashboards
-- [ ] API de presupuestos
+- [x] **API de presupuestos** ✅
 - [ ] Importación de datos desde archivos
 
 ## Licencia

@@ -5,6 +5,7 @@ from .income import Income, IncomeCreate, IncomeUpdate, IncomeResponse
 from .investment import Investment, InvestmentCreate, InvestmentUpdate, InvestmentResponse
 from .financial_product import FinancialProduct, FinancialProductCreate, FinancialProductUpdate, FinancialProductResponse
 from .debt import Debt, DebtCreate, DebtUpdate, DebtResponse
+from .budget import Budget, BudgetCreate, BudgetUpdate, BudgetResponse, BudgetItem, BudgetItemCreate, BudgetItemUpdate, BudgetItemResponse, BudgetComparison, BudgetSummary
 
 __all__ = [
     "User", "UserCreate", "UserUpdate", "UserInDB", "UserInDBBase",
@@ -13,5 +14,8 @@ __all__ = [
     "Income", "IncomeCreate", "IncomeUpdate", "IncomeResponse",
     "Investment", "InvestmentCreate", "InvestmentUpdate", "InvestmentResponse",
     "FinancialProduct", "FinancialProductCreate", "FinancialProductUpdate", "FinancialProductResponse",
-    "Debt", "DebtCreate", "DebtUpdate", "DebtResponse"
+    "Debt", "DebtCreate", "DebtUpdate", "DebtResponse",
+    "Budget", "BudgetCreate", "BudgetUpdate", "BudgetResponse",
+    "BudgetItem", "BudgetItemCreate", "BudgetItemUpdate", "BudgetItemResponse",
+    "BudgetComparison", "BudgetSummary"
 ]

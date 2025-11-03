@@ -21,6 +21,8 @@ from app.models.investment import Investment
 from app.models.financial_product import FinancialProduct
 from app.models.debt import Debt
 from app.models.category import Category
+from app.models.budget import Budget, BudgetItem
+from decimal import Decimal
 from app.utils.auth import get_password_hash, create_access_token
 
 # Configurar base de datos de prueba
@@ -204,6 +206,41 @@ def test_debt(db_session, test_user):
     db_session.commit()
     db_session.refresh(debt)
     return debt
+
+@pytest.fixture
+def test_budget(db_session, test_user, test_category):
+    """Crear presupuesto de prueba"""
+    from datetime import date
+    budget = Budget(
+        user_id=test_user.id,
+        name="Test Budget",
+        description="Monthly budget for testing",
+        start_date=date.today(),
+        end_date=date.today().replace(day=28),
+        total_budgeted=Decimal('1000.00'),
+        total_spent=Decimal('0.00'),
+        currency="COP",
+        is_active=True
+    )
+    db_session.add(budget)
+    db_session.commit()
+    db_session.refresh(budget)
+    return budget
+
+@pytest.fixture
+def test_budget_item(db_session, test_budget, test_category):
+    """Crear ítem de presupuesto de prueba"""
+    budget_item = BudgetItem(
+        budget_id=test_budget.id,
+        category_id=test_category.id,
+        budgeted_amount=Decimal('500.00'),
+        spent_amount=Decimal('0.00'),
+        notes="Test budget item"
+    )
+    db_session.add(budget_item)
+    db_session.commit()
+    db_session.refresh(budget_item)
+    return budget_item
 
 @pytest_asyncio.fixture
 async def async_client():

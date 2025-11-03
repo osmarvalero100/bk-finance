@@ -28,3 +28,4 @@ class Category(Base):
     # Relaciones con transacciones
     expenses = relationship("Expense", back_populates="category")
     incomes = relationship("Income", back_populates="category")
+    budget_items = relationship("BudgetItem", back_populates="category")
