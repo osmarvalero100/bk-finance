@@ -93,8 +93,8 @@ class TestAuthEndpoints:
         }
         response = await async_client.post("/auth/register", json=user_data)
 
-        # Current implementation may return 400 Bad Request for short passwords
-        assert response.status_code in (400, 422)
+        # Should return 422 Unprocessable Entity for validation error
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_login_success(self, async_client: AsyncClient, test_user):

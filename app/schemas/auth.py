@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 class Token(BaseModel):
@@ -19,5 +19,5 @@ class UserRegister(BaseModel):
     """Esquema para registro de usuario"""
     email: EmailStr
     username: str
-    password: str
+    password: str = Field(..., min_length=6)
     full_name: Optional[str] = None
