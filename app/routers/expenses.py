@@ -1,7 +1,8 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_, desc
+from sqlalchemy import and_, desc, or_
 
 from app.core.database import get_db
 from app.models.user import User
@@ -108,6 +109,57 @@ async def get_expenses(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error al obtener los gastos: {str(e)}"
+        )
+
+@router.get("/filter", response_model=List[ExpenseResponse])
+async def filter_expenses(
+    start_date: Optional[datetime] = Query(None, description="Fecha inicio (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="Fecha fin (ISO 8601)"),
+    min_amount: Optional[float] = Query(None, gt=0, description="Monto mínimo"),
+    max_amount: Optional[float] = Query(None, gt=0, description="Monto máximo"),
+    category_id: Optional[int] = Query(None, description="Filtrar por categoría"),
+    payment_method_id: Optional[int] = Query(None, description="Filtrar por método de pago"),
+    description: Optional[str] = Query(None, description="Búsqueda parcial en descripción"),
+    is_recurring: Optional[bool] = Query(None, description="Filtrar por recurrentes"),
+    tag_ids: Optional[List[int]] = Query(None, description="Filtrar por una o más etiquetas"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, gt=0),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Filtrar gastos del usuario con múltiples criterios"""
+    try:
+        query = db.query(Expense).options(
+            joinedload(Expense.category),
+            joinedload(Expense.payment_method),
+            joinedload(Expense.tags)
+        ).filter(Expense.user_id == current_user.id)
+
+        if start_date:
+            query = query.filter(Expense.date >= start_date)
+        if end_date:
+            query = query.filter(Expense.date <= end_date)
+        if min_amount:
+            query = query.filter(Expense.amount >= min_amount)
+        if max_amount:
+            query = query.filter(Expense.amount <= max_amount)
+        if category_id:
+            query = query.filter(Expense.category_id == category_id)
+        if payment_method_id:
+            query = query.filter(Expense.payment_method_id == payment_method_id)
+        if description:
+            query = query.filter(Expense.description.ilike(f"%{description}%"))
+        if is_recurring is not None:
+            query = query.filter(Expense.is_recurring == is_recurring)
+        if tag_ids:
+            query = query.join(Expense.tags).filter(Tag.id.in_(tag_ids))
+
+        expenses = query.order_by(desc(Expense.date)).offset(skip).limit(limit).all()
+        return [ExpenseResponse.model_validate(expense) for expense in expenses]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al filtrar los gastos: {str(e)}"
         )
 
 @router.get("/{expense_id}", response_model=ExpenseResponse)
@@ -227,6 +279,7 @@ async def update_expense(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error al actualizar el gasto: {str(e)}"
         )
+
 
 @router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_expense(
