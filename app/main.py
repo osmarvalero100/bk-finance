@@ -6,7 +6,7 @@ import logging
 
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.routers import auth, expenses, incomes, investments, financial_products, debts, categories, payment_methods, tags, budgets
+from app.routers import auth, expenses, incomes, investments, financial_products, debts, categories, payment_methods, tags, budgets, dashboard
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -44,6 +44,7 @@ app.include_router(investments.router, prefix="/investments", tags=["Inversiones
 app.include_router(financial_products.router, prefix="/financial-products", tags=["Productos Financieros"])
 app.include_router(debts.router, prefix="/debts", tags=["Deudas"])
 app.include_router(budgets.router, prefix="/budgets", tags=["Presupuestos"])
+app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 
 @app.get("/", tags=["Root"])
 async def root():
