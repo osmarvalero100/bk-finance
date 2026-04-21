@@ -20,6 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    op.drop_constraint("incomes_ibfk_1", "incomes", type_="foreignkey")
     op.drop_column("incomes", "category_id")
 
 
