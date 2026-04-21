@@ -3,8 +3,10 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
+
 class Category(Base):
     """Modelo de Categoría"""
+
     __tablename__ = "categories"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -18,7 +20,9 @@ class Category(Base):
     parent_id = Column(Integer, ForeignKey("categories.id"))  # For subcategories
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     # Relaciones
     user = relationship("User", back_populates="categories")
@@ -27,5 +31,4 @@ class Category(Base):
 
     # Relaciones con transacciones
     expenses = relationship("Expense", back_populates="category")
-    incomes = relationship("Income", back_populates="category")
     budget_items = relationship("BudgetItem", back_populates="category")
