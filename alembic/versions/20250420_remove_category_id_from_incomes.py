@@ -20,8 +20,18 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_constraint("incomes_ibfk_1", "incomes", type_="foreignkey")
-    op.drop_column("incomes", "category_id")
+    conn = op.get_bind()
+    result = conn.execute(
+        sa.text(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_NAME='incomes' AND COLUMN_NAME='category_id' AND TABLE_SCHEMA=(SELECT DATABASE())"
+        )
+    ).scalar()
+    if result > 0:
+        try:
+            op.drop_constraint("incomes_ibfk_1", "incomes", type_="foreignkey")
+        except Exception:
+            pass
+        op.drop_column("incomes", "category_id")
 
 
 def downgrade() -> None:
