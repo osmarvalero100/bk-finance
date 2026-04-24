@@ -98,6 +98,12 @@ DATABASE_URL=sqlite:///./finance_dev.db
 python -c "from app.core.database import engine, Base; Base.metadata.create_all(bind=engine)"
 ```
 
+O usando Alembic:
+
+```bash
+alembic upgrade head
+```
+
 ### 6. Iniciar servidor
 
 ```bash
@@ -105,6 +111,33 @@ uvicorn app.main:app --reload
 ```
 
 La API estará disponible en `http://localhost:8000`
+
+## Datos de Demo (Opcional)
+
+Para poblar la base de datos con datos de ejemplo realistas, ejecuta el script:
+
+```bash
+python scripts/seed_demo.py
+```
+
+Esto insertará:
+- **1 usuario demo**: `demo@bkfinance.com` / `password123`
+- **15 categorías** (10 gastos + 5 ingresos)
+- **6 métodos de pago**
+- **5 etiquetas**
+- **20 gastos** (últimos 6 meses)
+- **10 ingresos** (últimos 6 meses)
+- **3 inversiones**
+- **3 productos financieros**
+- **1 deuda**
+- **1 presupuesto** con 6 categorías
+
+> **Nota**: El script detecta si ya hay datos y los salta. Para volver a ejecutar, primero limpia los datos:
+
+```bash
+python scripts/reset_demo.py
+python scripts/seed_demo.py
+```
 
 ## Documentación de la API
 
