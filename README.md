@@ -121,7 +121,7 @@ python scripts/seed_demo.py
 ```
 
 Esto insertará:
-- **1 usuario demo**: `demo@bkfinance.com` / `password123`
+- **1 usuario demo**: `demo_user` / `password123`
 - **15 categorías** (10 gastos + 5 ingresos)
 - **6 métodos de pago**
 - **5 etiquetas**
