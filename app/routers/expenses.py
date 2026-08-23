@@ -312,6 +312,8 @@ async def delete_expense(
 
 @router.get("/summary/category")
 async def get_expenses_summary_by_category(
+    start_date: Optional[datetime] = Query(None, description="Fecha inicio (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="Fecha fin (ISO 8601)"),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -319,7 +321,7 @@ async def get_expenses_summary_by_category(
     try:
         from sqlalchemy import func
 
-        summary = db.query(
+        query = db.query(
             Category.name.label('category_name'),
             Category.id.label('category_id'),
             Category.color,
@@ -330,7 +332,14 @@ async def get_expenses_summary_by_category(
             Expense, Category.id == Expense.category_id
         ).filter(
             Category.user_id == current_user.id
-        ).group_by(
+        )
+
+        if start_date:
+            query = query.filter(Expense.date >= start_date)
+        if end_date:
+            query = query.filter(Expense.date <= end_date)
+
+        summary = query.group_by(
             Category.id, Category.name, Category.color, Category.icon
         ).all()
 
