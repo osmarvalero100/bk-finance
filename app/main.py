@@ -12,8 +12,12 @@ from app.routers import auth, expenses, incomes, investments, financial_products
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Crear las tablas en la base de datos (solo en desarrollo)
-# Base.metadata.create_all(bind=engine)
+# Asegurar que las tablas existan en la base de datos
+try:
+    import app.models
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    logger.warning(f"No se pudieron verificar/crear tablas automáticamente en inicio: {e}")
 
 # Crear aplicación FastAPI
 app = FastAPI(
