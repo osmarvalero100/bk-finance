@@ -8,5 +8,6 @@ from .budget import Budget, BudgetItem
 from .category import Category
 from .tag import Tag
 from .payment_method import PaymentMethod
+from .fixed_expense import FixedExpense
 
-__all__ = ["User", "Expense", "Income", "Investment", "FinancialProduct", "Debt", "Budget", "BudgetItem", "Category", "Tag", "PaymentMethod"]
+__all__ = ["User", "Expense", "Income", "Investment", "FinancialProduct", "Debt", "Budget", "BudgetItem", "Category", "Tag", "PaymentMethod", "FixedExpense"]

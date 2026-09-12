@@ -22,6 +22,16 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = Field(default=["http://localhost:3000", "http://localhost:8080"])
 
+    # Email / SMTP Configuration
+    SMTP_HOST: str = Field(default="localhost")
+    SMTP_PORT: int = Field(default=587)
+    SMTP_USER: Optional[str] = Field(default=None)
+    SMTP_PASSWORD: Optional[str] = Field(default=None)
+    SMTP_TLS: bool = Field(default=False)
+    EMAILS_FROM_EMAIL: str = Field(default="notificaciones@finanzas.local")
+    EMAILS_FROM_NAME: str = Field(default="Finanzas Personales")
+    EMAIL_NOTIFICATIONS_ENABLED: bool = Field(default=True)
+
     class Config:
         env_file = ".env"
         case_sensitive = False

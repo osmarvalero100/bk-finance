@@ -22,6 +22,7 @@ from app.models.financial_product import FinancialProduct
 from app.models.debt import Debt
 from app.models.category import Category
 from app.models.budget import Budget, BudgetItem
+from app.models.fixed_expense import FixedExpense
 from decimal import Decimal
 from app.utils.auth import get_password_hash, create_access_token
 

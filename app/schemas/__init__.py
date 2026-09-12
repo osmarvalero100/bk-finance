@@ -6,6 +6,7 @@ from .investment import Investment, InvestmentCreate, InvestmentUpdate, Investme
 from .financial_product import FinancialProduct, FinancialProductCreate, FinancialProductUpdate, FinancialProductResponse
 from .debt import Debt, DebtCreate, DebtUpdate, DebtResponse
 from .budget import Budget, BudgetCreate, BudgetUpdate, BudgetResponse, BudgetItem, BudgetItemCreate, BudgetItemUpdate, BudgetItemResponse, BudgetComparison, BudgetSummary
+from .fixed_expense import FixedExpenseBase, FixedExpenseCreate, FixedExpenseUpdate, FixedExpenseResponse, FixedExpenseSummary, ReminderCheckResult
 
 __all__ = [
     "User", "UserCreate", "UserUpdate", "UserInDB", "UserInDBBase",
@@ -17,5 +18,6 @@ __all__ = [
     "Debt", "DebtCreate", "DebtUpdate", "DebtResponse",
     "Budget", "BudgetCreate", "BudgetUpdate", "BudgetResponse",
     "BudgetItem", "BudgetItemCreate", "BudgetItemUpdate", "BudgetItemResponse",
-    "BudgetComparison", "BudgetSummary"
+    "BudgetComparison", "BudgetSummary",
+    "FixedExpenseBase", "FixedExpenseCreate", "FixedExpenseUpdate", "FixedExpenseResponse", "FixedExpenseSummary", "ReminderCheckResult"
 ]

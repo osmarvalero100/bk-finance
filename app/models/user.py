@@ -26,3 +26,4 @@ class User(Base):
     payment_methods = relationship("PaymentMethod", back_populates="user", cascade="all, delete-orphan")
     tags = relationship("Tag", back_populates="user", cascade="all, delete-orphan")
     budgets = relationship("Budget", back_populates="user", cascade="all, delete-orphan")
+    fixed_expenses = relationship("FixedExpense", back_populates="user", cascade="all, delete-orphan")
